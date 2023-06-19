@@ -1,2 +1,2 @@
 # Botler
-Discord
+A Discord Bot for friends
