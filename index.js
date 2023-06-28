@@ -5,7 +5,7 @@ const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
 require("dotenv").config();
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 
 client.commands = new Collection();
 
@@ -57,8 +57,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.reply(errorResponse);
     }
   }
-
-  console.log({ interaction });
 });
 
 // Log in to Discord with your client's token
