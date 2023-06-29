@@ -1,8 +1,12 @@
 const { SlashCommandBuilder } = require("discord.js");
+const { player } = require("../../src/audioPlayer.js");
 
 module.exports = {
-  data: new SlashCommandBuilder().setName("stop").setDescription("PLACEHOLDER FOR PLAY SONG"),
+  data: new SlashCommandBuilder().setName("stop").setDescription("STOP"),
   async execute(interaction) {
-    await interaction.reply("Bong!");
+    if (player) {
+      player.stop();
+    }
+    await interaction.reply("Stopping song 🤚🛑🚫");
   },
 };

@@ -2,19 +2,19 @@ const { SlashCommandBuilder } = require("discord.js");
 const ytdl = require("ytdl-core");
 const {
   createAudioResource,
-  createAudioPlayer,
   joinVoiceChannel,
   AudioPlayerStatus,
   VoiceConnectionStatus,
 } = require("@discordjs/voice");
+const { player } = require("../../src/audioPlayer");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("play")
-    .setDescription("PLACEHOLDER FOR PLAY SONG")
-    .addStringOption((option) => option.setName("song").setDescription("The song you want to play").setRequired(true)),
+    .setDescription("Play")
+    .addStringOption((option) => option.setName("song").setDescription("PLAY A SONG FROM A POPULAR STREAMING PLATFORM").setRequired(true)),
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: false });
 
     const songName = interaction.options.getString("song");
     const youtubeSearchURL = "https://www.youtube.com/watch?v=";
@@ -31,11 +31,10 @@ module.exports = {
     });
 
     const resource = createAudioResource(ytdl(videoURL, { filter: "audioonly" }));
-    const player = createAudioPlayer();
     
     player.play(resource);
     connection.subscribe(player);
-    interaction.followUp(`Now playing ${videoURL}`)
+    interaction.followUp(`Now playing ${videoURL} 🔊`)
 
     player.on(AudioPlayerStatus.Playing, () => {
       console.log("The audio player has started playing!");
