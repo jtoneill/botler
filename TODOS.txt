@@ -1,0 +1,4 @@
+* try to optimize bot by playing only webm and ogg files OPTIONAL
+    * Remove ff-mpeg-static dependency (shouldn't be necessary if above is true)
+* Flesh out all the commands
+    * Start with play and stop
