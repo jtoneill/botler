@@ -14,6 +14,8 @@ module.exports = {
     .setDescription("PLACEHOLDER FOR PLAY SONG")
     .addStringOption((option) => option.setName("song").setDescription("The song you want to play").setRequired(true)),
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const songName = interaction.options.getString("song");
     const youtubeSearchURL = "https://www.youtube.com/watch?v=";
     const searchResponse = await fetch(
@@ -21,86 +23,58 @@ module.exports = {
     );
     const jsonData = await searchResponse.json();
     const videoURL = youtubeSearchURL + jsonData.items[0].id.videoId;
-    // const info = await ytdl.getInfo(jsonData.items[0].id.videoId);
-    
-    // Quality 250 should correspond to a webm format
-    // See https://github.com/fent/node-ytdl-core#ytdlchooseformatformats-options
-    // ytdl.chooseFormat(info.formats, { quality: "250" });
-    
-    // ytdl returns a PassThrough stream 
-    const passthroughStream = ytdl(videoURL, { filter: "audioonly" });
-    const dumbChunks = [];
 
-    passthroughStream.on('info', (info, videoFormat) => {
-      console.log({ info, videoFormat});
+    const connection = joinVoiceChannel({
+      channelId: interaction.member.voice.channelId,
+      guildId: interaction.guildId,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
+    });
+
+    const resource = createAudioResource(ytdl(videoURL, { filter: "audioonly" }));
+    const player = createAudioPlayer();
+    
+    player.play(resource);
+    connection.subscribe(player);
+    interaction.followUp(`Now playing ${videoURL}`)
+
+    player.on(AudioPlayerStatus.Playing, () => {
+      console.log("The audio player has started playing!");
+    });
+
+    player.on(AudioPlayerStatus.Paused, () => {
+      console.log("The audio player has started PAUSING!");
+    });
+
+    player.on("error", (error) => {
+      console.error(`Error: ${error}`);
     });
     
-    passthroughStream.on('data', chunk => {
-      dumbChunks.push(chunk);
-    })
-    
-    passthroughStream.on('end', () => {
-      console.log('FUKING DONE BOIIIIIII WE DONE DID IT')
+    player.on(AudioPlayerStatus.Idle, () => {
+      console.log('Player Status: Idle')
+    });
 
-      const connection = joinVoiceChannel({
-        channelId: interaction.member.voice.channelId,
-        guildId: interaction.guildId,
-        adapterCreator: interaction.guild.voiceAdapterCreator,
-        selfDeaf: false,
-        selfMute: false
-      });
+    connection.on(VoiceConnectionStatus.Ready, () => {
+      console.log('The connection has entered the Ready state - ready to play audio!');
+    });
 
-      const resource = createAudioResource(passthroughStream);
-      const player = createAudioPlayer();
-      
-      player.play(resource);
-      connection.subscribe(player);
-      interaction.followUp(`Now playing ${videoURL}`)
+    connection.on(VoiceConnectionStatus.Signalling, () => {
+      console.log('Requesting to join channel');
+    });
 
-      player.on(AudioPlayerStatus.Playing, () => {
-        console.log("The audio player has started playing!");
-      });
+    connection.on(VoiceConnectionStatus.Connecting, () => {
+      console.log('Got permission! Connecting to channel');
+    });
 
-      player.on(AudioPlayerStatus.Paused, () => {
-        console.log("The audio player has started PAUSING!");
-      });
+    connection.on(VoiceConnectionStatus.Disconnected, () => {
+      console.log('Fuck! We d/cd');
+    });
 
-      player.on("error", (error) => {
-        console.error(`Error: ${error}`);
-        // player.play(getNextResource());
-      });
-      
-      player.on(AudioPlayerStatus.Idle, () => {
-        console.log('Player Status: Idle')
-      });
+    connection.on(VoiceConnectionStatus.Destroyed, () => {
+      console.log('Fuck! DESTROYED');
+    });
 
-      connection.on(VoiceConnectionStatus.Ready, () => {
-        console.log('The connection has entered the Ready state - ready to play audio!');
-      });
-
-      connection.on(VoiceConnectionStatus.Signalling, () => {
-        console.log('Requesting to join channel');
-      });
-
-      connection.on(VoiceConnectionStatus.Connecting, () => {
-        console.log('Got permission! Connecting to channel');
-      });
-
-      connection.on(VoiceConnectionStatus.Disconnected, () => {
-        console.log('Fuck! We d/cd');
-      });
-
-      connection.on(VoiceConnectionStatus.Destroyed, () => {
-        console.log('Fuck! DESTROYED');
-      });
-
-      connection.on(VoiceConnectionStatus.Error, (error) => {
-        console.error('Voice connection error:', error);
-      });
-      
-    })
-  
-  
-    await interaction.deferReply({ ephemeral: true });
+    connection.on(VoiceConnectionStatus.Error, (error) => {
+      console.error('Voice connection error:', error);
+    });
   },
 };
