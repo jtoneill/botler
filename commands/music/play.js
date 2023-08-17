@@ -17,10 +17,16 @@ module.exports = {
     const songName = interaction.options.getString("song");
     const youtubeSearchURL = "https://www.youtube.com/watch?v=";
     const searchResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?q=${songName}&key=${process.env.YT_TOKEN}`
+      `https://www.googleapis.com/youtube/v3/search?q=${encodeURIComponent(songName)}&key=${process.env.YT_TOKEN}`
     );
+
     const jsonData = await searchResponse.json();
     const videoURL = youtubeSearchURL + jsonData.items[0].id.videoId;
+    console.log({
+      songName,
+      videoURL,
+      whatever: `https://www.googleapis.com/youtube/v3/search?q=${songName}&key=${process.env.YT_TOKEN}`,
+    });
     const info = await ytdl.getInfo(videoURL);
 
     if (!audioPlayer?.isPlaying) {
