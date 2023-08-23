@@ -28,7 +28,7 @@ class BotlerAudioPlayer {
 
     this.player.on("error", (error) => {
       console.error(`Player Status: Error`);
-      console.error(`Error: ${error}`);
+      console.error(`${error}`);
     });
   }
 

@@ -28,6 +28,7 @@ module.exports = {
         channelId: interaction.member.voice.channelId,
         guildId: interaction.guildId,
         adapterCreator: interaction.guild.voiceAdapterCreator,
+        selfDeaf: true,
       });
 
       let resource = createAudioResource(ytdl(videoURL, { filter: "audioonly" }));
